@@ -19,8 +19,7 @@ FastAPI + MongoDB. No seed data; collections are empty until you add data via th
 3. Run the API:
 
    ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
+python -m uvicorn app.main:app --reload --port 8000   ```
 
 - API root: http://localhost:8000  
 - OpenAPI docs: http://localhost:8000/docs  
