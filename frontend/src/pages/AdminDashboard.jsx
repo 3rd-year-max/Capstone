@@ -21,6 +21,7 @@ import DashboardLayout from '../components/DashboardLayout'
 import AdminSystemAnalytics from '../components/admin/AdminSystemAnalytics'
 import AdminInstitutionReports from '../components/admin/AdminInstitutionReports'
 import AdminUserAccounts from '../components/admin/AdminUserAccounts'
+import AdminPendingAccounts from '../components/admin/AdminPendingAccounts'
 import AdminInterventions from '../components/admin/AdminInterventions'
 import AdminStudentsAtRisk from '../components/admin/AdminStudentsAtRisk'
 import AdminDepartments from '../components/admin/AdminDepartments'
@@ -42,6 +43,7 @@ const KPI_CONFIG = [
 
 const MAIN_TABS = [
   { id: 'overview', label: 'System Overview', icon: BarChart3 },
+  { id: 'pending', label: 'Pending Accounts', icon: User },
   { id: 'analytics', label: 'System Analytics', icon: BarChart3 },
   { id: 'reports', label: 'Institution Reports', icon: FileText },
   { id: 'users', label: 'User Accounts', icon: User },
@@ -261,6 +263,7 @@ export default function AdminDashboard() {
           </>
         )}
 
+        {mainTab === 'pending' && <AdminPendingAccounts />}
         {mainTab === 'analytics' && <AdminSystemAnalytics />}
         {mainTab === 'reports' && <AdminInstitutionReports />}
         {mainTab === 'users' && <AdminUserAccounts />}

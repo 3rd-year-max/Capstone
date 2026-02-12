@@ -37,6 +37,75 @@ def _check_password(password: str, password_hash: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
 
 
+def _signup_admin_flow(db, coll, body, existing, doc_base):
+    """Admin signup: email verification link. Returns (doc, response_dict)."""
+    token = secrets.token_urlsafe(32)
+    expires = datetime.now(timezone.utc) + timedelta(hours=24)
+    doc = {
+        **doc_base,
+        "status": "active",
+        "email_verified": False,
+        "email_verification_token": token,
+        "email_verification_expires": expires,
+    }
+    if existing:
+        coll.update_one({"_id": existing["_id"]}, {"$set": doc})
+        doc["_id"] = existing["_id"]
+    else:
+        result = coll.insert_one(doc)
+        doc["_id"] = result.inserted_id
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+    verification_link = f"{frontend_url}/verify-email?token={token}"
+    sent, send_err = send_verification_email(body.email, verification_link, body.name)
+    if not sent:
+        import logging
+        logging.getLogger(__name__).warning(
+            "Verification email not sent: %s. Link (dev): %s", send_err or "unknown", verification_link
+        )
+    response = {
+        "id": str(doc["_id"]),
+        "name": doc["name"],
+        "email": doc["email"],
+        "role": doc["role"],
+        "department": doc["department"],
+        "status": doc["status"],
+        "contact_number": doc.get("contact_number", ""),
+        "email_verified": False,
+        "requires_email_verification": True,
+    }
+    if not sent:
+        response["verification_link"] = verification_link
+    return doc, response
+
+
+def _signup_instructor_amu_flow(coll, body, existing, doc_base):
+    """Instructor/AMU Staff signup: pending admin approval. No verification email. Returns (doc, response_dict)."""
+    doc = {
+        **doc_base,
+        "status": "pending",
+        "email_verified": False,
+    }
+    if existing:
+        coll.update_one({"_id": existing["_id"]}, {"$set": doc})
+        doc["_id"] = existing["_id"]
+    else:
+        result = coll.insert_one(doc)
+        doc["_id"] = result.inserted_id
+    response = {
+        "id": str(doc["_id"]),
+        "name": doc["name"],
+        "email": doc["email"],
+        "role": doc["role"],
+        "department": doc["department"],
+        "status": doc["status"],
+        "contact_number": doc.get("contact_number", ""),
+        "email_verified": False,
+        "requires_email_verification": False,
+        "pending_approval": True,
+    }
+    return doc, response
+
+
 @router.post("/signup")
 def signup(body: SignUpRequest):
     try:
@@ -46,47 +115,21 @@ def signup(body: SignUpRequest):
         existing = coll.find_one({"email": body.email})
         if existing and existing.get("email_verified") is True:
             raise HTTPException(status_code=400, detail="Email already registered")
-        token = secrets.token_urlsafe(32)
-        expires = datetime.now(timezone.utc) + timedelta(hours=24)
-        doc = {
+        doc_base = {
             "name": body.name,
             "email": body.email,
             "role": body.role,
             "department": (body.department or "").strip(),
-            "status": "active",
             "contact_number": body.contact_number or "",
             "password_hash": _hash_password(body.password),
-            "email_verified": False,
-            "email_verification_token": token,
-            "email_verification_expires": expires,
         }
-        if existing:
-            coll.update_one({"_id": existing["_id"]}, {"$set": doc})
-            doc["_id"] = existing["_id"]
+        if body.role == "admin":
+            doc, response = _signup_admin_flow(db, coll, body, existing, doc_base)
+            return response
         else:
-            result = coll.insert_one(doc)
-            doc["_id"] = result.inserted_id
-        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
-        verification_link = f"{frontend_url}/verify-email?token={token}"
-        sent, send_err = send_verification_email(body.email, verification_link, body.name)
-        if not sent:
-            import logging
-            logging.getLogger(__name__).warning(
-                "Verification email not sent: %s. Link (dev): %s", send_err or "unknown", verification_link
-            )
-        response = {
-            "id": str(doc["_id"]),
-            "name": doc["name"],
-            "email": doc["email"],
-            "role": doc["role"],
-            "department": doc["department"],
-            "status": doc["status"],
-            "contact_number": doc.get("contact_number", ""),
-            "email_verified": False,
-        }
-        if not sent:
-            response["verification_link"] = verification_link
-        return response
+            # instructor or amu-staff: pending admin approval
+            doc, response = _signup_instructor_amu_flow(coll, body, existing, doc_base)
+            return response
     except ServerSelectionTimeoutError:
         raise HTTPException(
             status_code=503,

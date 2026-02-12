@@ -267,6 +267,38 @@ export async function updateEnrollment(classId, studentEmail, payload) {
 
 // ----- Admin system overview (real data from DB) -----
 
+/** Pending accounts (instructor/amu-staff awaiting admin approval). */
+export async function getAdminPendingAccounts() {
+  const res = await fetch(`${API_BASE}/api/admin/pending-accounts`)
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(formatErrorDetail(data.detail) || res.statusText || 'Failed to load pending accounts')
+  }
+  return Array.isArray(data) ? data : []
+}
+
+export async function approvePendingAccount(userId) {
+  const res = await fetch(`${API_BASE}/api/admin/pending-accounts/${encodeURIComponent(userId)}/approve`, {
+    method: 'POST',
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(formatErrorDetail(data.detail) || res.statusText || 'Failed to approve')
+  }
+  return data
+}
+
+export async function declinePendingAccount(userId) {
+  const res = await fetch(`${API_BASE}/api/admin/pending-accounts/${encodeURIComponent(userId)}/decline`, {
+    method: 'POST',
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(formatErrorDetail(data.detail) || res.statusText || 'Failed to decline')
+  }
+  return data
+}
+
 /** Departments from instructors only (not admin/amu-staff). */
 export async function getAdminInstructorDepartments() {
   const res = await fetch(`${API_BASE}/api/admin/departments`)

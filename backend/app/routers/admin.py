@@ -3,10 +3,11 @@ Admin-only endpoints for system overview: KPIs, departments (from instructors on
 students at risk, department stats, instructors list, and trends.
 """
 from bson import ObjectId
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pymongo.errors import ServerSelectionTimeoutError
 
 from app.database import get_db
+from app.email_sender import send_account_decision_email
 
 router = APIRouter()
 
@@ -515,8 +516,93 @@ def download_report(report_id: str):
             return StreamingResponse(io.BytesIO(buf.getvalue().encode("utf-8")), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=interventions.csv"})
 
         # ai-accuracy: no data
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Report not found or not available for download.")
     except ServerSelectionTimeoutError:
-        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Database unavailable.")
+
+
+# ----- Pending accounts (instructor / amu-staff signups awaiting admin approval) -----
+
+@router.get("/pending-accounts")
+def list_pending_accounts():
+    """List users with status 'pending' from instructor and amu-staff collections (for admin approval)."""
+    try:
+        db = get_db()
+        out = []
+        for coll_name in ("instructor", "amustaff"):
+            role_label = "instructor" if coll_name == "instructor" else "amu-staff"
+            for doc in db[coll_name].find({"status": "pending"}):
+                out.append({
+                    "id": str(doc["_id"]),
+                    "name": doc.get("name", ""),
+                    "email": doc.get("email", ""),
+                    "role": role_label,
+                    "department": doc.get("department", ""),
+                    "contact_number": doc.get("contact_number", ""),
+                    "status": doc.get("status", "pending"),
+                })
+        return out
+    except ServerSelectionTimeoutError:
+        raise HTTPException(status_code=503, detail="Database unavailable.")
+
+
+def _find_pending_user(db, user_id: str):
+    """Return (doc, coll_name) for a user in instructor or amustaff with status pending, else (None, None)."""
+    if not ObjectId.is_valid(user_id):
+        return None, None
+    oid = ObjectId(user_id)
+    for coll_name in ("instructor", "amustaff"):
+        doc = db[coll_name].find_one({"_id": oid, "status": "pending"})
+        if doc:
+            return doc, coll_name
+    return None, None
+
+
+@router.post("/pending-accounts/{user_id}/approve")
+def approve_pending_account(user_id: str):
+    """Approve a pending instructor/amu-staff account: set active + email_verified, send confirmation email."""
+    try:
+        db = get_db()
+        doc, coll_name = _find_pending_user(db, user_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Pending account not found.")
+        db[coll_name].update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"status": "active", "email_verified": True}},
+        )
+        email = doc.get("email", "")
+        name = doc.get("name", "User")
+        sent, _ = send_account_decision_email(email, name, approved=True)
+        if not sent:
+            import logging
+            logging.getLogger(__name__).warning("Account approved but notification email not sent to %s", email)
+        return {"message": "Account approved.", "email_sent": sent}
+    except HTTPException:
+        raise
+    except ServerSelectionTimeoutError:
+        raise HTTPException(status_code=503, detail="Database unavailable.")
+
+
+@router.post("/pending-accounts/{user_id}/decline")
+def decline_pending_account(user_id: str):
+    """Decline a pending instructor/amu-staff account: set inactive, send decline email."""
+    try:
+        db = get_db()
+        doc, coll_name = _find_pending_user(db, user_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Pending account not found.")
+        db[coll_name].update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"status": "inactive"}},
+        )
+        email = doc.get("email", "")
+        name = doc.get("name", "User")
+        sent, _ = send_account_decision_email(email, name, approved=False)
+        if not sent:
+            import logging
+            logging.getLogger(__name__).warning("Account declined but notification email not sent to %s", email)
+        return {"message": "Account declined.", "email_sent": sent}
+    except HTTPException:
+        raise
+    except ServerSelectionTimeoutError:
         raise HTTPException(status_code=503, detail="Database unavailable.")

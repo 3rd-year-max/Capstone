@@ -5,6 +5,7 @@ import { NotificationsProvider } from './context/NotificationsContext'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import CheckEmail from './pages/CheckEmail'
+import PendingApproval from './pages/PendingApproval'
 import VerifyEmail from './pages/VerifyEmail'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/check-email" element={<CheckEmail />} />
+        <Route path="/pending-approval" element={<PendingApproval />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />

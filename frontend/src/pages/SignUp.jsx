@@ -53,7 +53,11 @@ export default function SignUp() {
     setLoading(true)
     try {
       const data = await signup({ name, email, password, contact_number: fullContactNumber, department, role })
-      navigate('/check-email', { state: { email, verificationLink: data.verification_link } })
+      if (data.pending_approval) {
+        navigate('/pending-approval', { state: { email } })
+      } else {
+        navigate('/check-email', { state: { email, verificationLink: data.verification_link } })
+      }
     } catch (err) {
       setError(err.message || 'Signup failed')
     } finally {
@@ -75,7 +79,7 @@ export default function SignUp() {
         </svg>
       </div>
 
-      <div className="relative z-10 w-full max-w-md px-4 text-center">
+      <div className="relative z-10 w-full max-w-xl px-4 text-center">
         <div className="flex justify-center gap-4 mb-4">
           <div className="p-2 rounded-lg bg-white/60 shadow-sm">
             <Brain className="w-8 h-8 text-blue-600" strokeWidth={1.8} />
@@ -90,7 +94,7 @@ export default function SignUp() {
         </h1>
         <p className="text-gray-600 text-base mb-8">Create your account to get started.</p>
 
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8 text-left">
+        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-10 text-left">
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Create account</h2>
           <p className="text-gray-500 text-base mb-6">Enter your details below.</p>
 

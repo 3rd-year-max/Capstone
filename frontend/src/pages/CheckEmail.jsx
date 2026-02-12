@@ -8,8 +8,8 @@ export default function CheckEmail() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#e8e0f5] via-[#e5eef7] to-[#d4e8f0] py-8">
-      <div className="relative z-10 w-full max-w-md px-4 text-center">
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8">
+      <div className="relative z-10 w-full max-w-xl px-4 text-center">
+        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-10">
           <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-6">
             <Mail className="w-8 h-8 text-blue-600" />
           </div>

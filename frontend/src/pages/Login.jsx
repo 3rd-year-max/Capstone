@@ -52,40 +52,36 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#e8e0f5] via-[#e5eef7] to-[#d4e8f0] py-8">
-      {/* Decorative dots in bottom-right */}
-      <div className="absolute bottom-0 right-0 w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] opacity-40">
-        <svg viewBox="0 0 100 100" className="w-full h-full text-lime-300/80">
-          {Array.from({ length: 200 }).map((_, i) => {
-            const angle = (i / 200) * 90 * (Math.PI / 180)
-            const r = 40 + (i % 5) * 2
-            const x = 50 + Math.cos(angle) * r
-            const y = 50 + Math.sin(angle) * r
-            return <circle key={i} cx={x} cy={y} r="0.8" fill="currentColor" />
-          })}
-        </svg>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden py-12 sm:py-16 px-4">
+      {/* University background image only (place your photo at public/images/bukidnon-bg.jpg or .png) */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
+        style={{ backgroundImage: "url('/images/bukidnon-bg.jpg')" }}
+      />
 
-      <div className="relative z-10 w-full max-w-md px-4 text-center">
-        {/* Icons */}
-        <div className="flex justify-center gap-4 mb-4">
-          <div className="p-2 rounded-lg bg-white/60 shadow-sm">
-            <Brain className="w-8 h-8 text-blue-600" strokeWidth={1.8} />
-          </div>
-          <div className="p-2 rounded-lg bg-white/60 shadow-sm">
-            <GraduationCap className="w-8 h-8 text-blue-600" strokeWidth={1.8} />
-          </div>
-        </div>
+      <div className="relative z-10 w-full max-w-[520px]">
+        {/* Login card: logo, title, subtitle, and form inside */}
+        <div className="w-full bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-10 text-left">
+          {/* Logo + title + subtitle inside container */}
+          <header className="text-center mb-6 pb-5 border-b border-slate-100">
+            <div className="flex justify-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0">
+                <Brain className="w-6 h-6 text-blue-600" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-6 h-6 text-blue-600" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </div>
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold text-blue-600 leading-snug tracking-tight mb-1">
+              Academic Early Warning System
+            </h1>
+            <p className="text-slate-600 text-sm font-normal tracking-tight">
+              Predictive insights for student success.
+            </p>
+          </header>
 
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-1">
-          Academic Early Warning System
-        </h1>
-        <p className="text-gray-600 text-base mb-8">Predictive insights for student success.</p>
-
-        {/* Login card */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8 text-left">
-          <h2 className="text-xl font-semibold text-gray-800 mb-1">Welcome back</h2>
-          <p className="text-gray-500 text-base mb-6">Sign in to access your dashboard.</p>
+          <h2 className="text-lg font-semibold text-slate-800 mb-0.5">Welcome back</h2>
+          <p className="text-slate-500 text-sm mb-5">Sign in to access your dashboard.</p>
 
           <form className="space-y-5" onSubmit={handleSignIn}>
             {error && (

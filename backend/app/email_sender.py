@@ -221,6 +221,98 @@ def send_verification_email(to_email: str, verification_link: str, user_name: st
         return False, err
 
 
+def _build_account_decision_email_content(user_name: str, approved: bool) -> tuple[str, str, str]:
+    """Return (subject, plain_body, html_body) for account approved or declined notification."""
+    if approved:
+        subject = "Your account has been approved - Academic Early Warning System"
+        plain_body = f"""Hello {user_name},
+
+Your account request for the Academic Early Warning System has been approved.
+
+You can now sign in with your email and password.
+
+— Academic Early Warning System
+"""
+        html_title = "Account approved"
+        html_lead = "Your account request has been approved. You can now sign in with your email and password."
+    else:
+        subject = "Your account request was not approved - Academic Early Warning System"
+        plain_body = f"""Hello {user_name},
+
+Your account request for the Academic Early Warning System has been declined.
+
+If you believe this is an error, please contact your institution's administrator.
+
+— Academic Early Warning System
+"""
+        html_title = "Account request declined"
+        html_lead = "Your account request has been declined. If you believe this is an error, please contact your institution's administrator."
+    html_body = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{html_title}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; padding: 24px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
+          <tr>
+            <td style="padding: 32px 32px 24px; text-align: center; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);">
+              <h1 style="margin: 0; font-size: 20px; font-weight: 700; color: #ffffff;">Academic Early Warning System</h1>
+              <p style="margin: 8px 0 0; font-size: 14px; color: rgba(255,255,255,0.9);">{html_title}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 16px; font-size: 16px; color: #374151; line-height: 1.5;">Hello {user_name},</p>
+              <p style="margin: 0; font-size: 15px; color: #6b7280; line-height: 1.6;">{html_lead}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 32px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #6b7280;">— Academic Early Warning System</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+    return subject, plain_body, html_body
+
+
+def send_account_decision_email(to_email: str, user_name: str, approved: bool) -> tuple[bool, str | None]:
+    """Send account approved or declined email. Returns (True, None) if sent, (False, error_message) otherwise."""
+    config = _get_gmail_config()
+    host, port, user, password, from_email = config
+    if host is None:
+        return False, "Gmail not configured"
+    subject, plain_body, html_body = _build_account_decision_email_content(user_name, approved)
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg.attach(MIMEText(plain_body, "plain"))
+    msg.attach(MIMEText(html_body, "html"))
+    try:
+        with smtplib.SMTP(host, port, timeout=15) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(user, password)
+            server.sendmail(from_email, to_email, msg.as_string())
+        logger.info("Account decision email (%s) sent to %s", "approved" if approved else "declined", to_email)
+        return True, None
+    except Exception as e:
+        logger.exception("Gmail SMTP failed: %s", e)
+        return False, str(e)
+
+
 def send_test_email(to_email: str | None = None) -> tuple[bool, str]:
     """
     Send a test verification email via Gmail. Returns (success, message).

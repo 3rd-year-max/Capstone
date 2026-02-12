@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Settings, LogOut } from 'lucide-react'
+import { Bell, Settings, LogOut, HelpCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../context/NotificationsContext'
@@ -51,9 +51,9 @@ export default function DashboardLayout({ title, subtitle, icon: Icon, variant =
   const divider = isInstructor ? 'bg-slate-200' : 'bg-gray-200'
 
   return (
-    <div className={`min-h-screen ${isInstructor ? 'bg-slate-50' : 'bg-gray-100'}`}>
+    <div className="min-h-screen bg-transparent">
       <header className={`sticky top-0 z-10 bg-white border-b ${isInstructor ? 'border-slate-200' : 'border-gray-200'} shadow-sm`}>
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <div className="max-w-[1920px] mx-auto px-6 sm:px-8 py-4 flex items-center justify-between gap-4">
           {/* Brand / identity */}
           <div className="flex items-center gap-3 min-w-0">
             <div
@@ -122,6 +122,15 @@ export default function DashboardLayout({ title, subtitle, icon: Icon, variant =
             >
               <Settings className="w-4 h-4" />
             </button>
+            <button
+              type="button"
+              onClick={() => navigate('/help')}
+              title="Help & FAQ"
+              className={`p-2.5 rounded-lg ${btnMuted} transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+              aria-label="Help"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
             <div className={`w-px h-6 ${divider} mx-0.5`} aria-hidden />
             <button
               type="button"
@@ -135,7 +144,7 @@ export default function DashboardLayout({ title, subtitle, icon: Icon, variant =
           </div>
         </div>
       </header>
-      <main className="max-w-[1600px] mx-auto px-6 py-6 min-h-[50vh]">{children}</main>
+      <main className="max-w-[1920px] mx-auto px-6 sm:px-8 py-8 min-h-[50vh]">{children}</main>
     </div>
   )
 }

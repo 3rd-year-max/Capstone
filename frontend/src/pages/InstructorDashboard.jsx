@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   BookOpen,
   Bell,
@@ -13,7 +13,15 @@ import {
   GraduationCap,
 } from 'lucide-react'
 import DashboardLayout from '../components/DashboardLayout'
+import TutorialModal from '../components/TutorialModal'
 import InstructorRiskAlerts from '../components/instructor/InstructorRiskAlerts'
+import {
+  hasSeenTutorial,
+  setTutorialSeen,
+  getPlayTutorialEveryLogin,
+  wasTutorialDismissedThisSession,
+  setTutorialDismissedThisSession,
+} from '../lib/tutorialPrefs'
 import InstructorStudentList from '../components/instructor/InstructorStudentList'
 import InstructorInterventions from '../components/instructor/InstructorInterventions'
 import { useAuth } from '../context/AuthContext'
@@ -74,7 +82,9 @@ function CourseCard({ course, onViewDetails }) {
 
 export default function InstructorDashboard() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
+  const [showTutorial, setShowTutorial] = useState(false)
   // Landing page is My Classes (overview page was removed)
   const [activeTab, setActiveTab] = useState('classes')
   const [classesList, setClassesList] = useState([])
@@ -107,6 +117,31 @@ export default function InstructorDashboard() {
       fetchClasses()
     }
   }, [activeTab, user?.id, fetchClasses])
+
+  useEffect(() => {
+    if (!user?.id) return
+    const fromSettings = location.state?.showTutorial
+    const playEvery = getPlayTutorialEveryLogin(user.id)
+    const dismissedThisSession = wasTutorialDismissedThisSession()
+    const seen = hasSeenTutorial(user.id)
+    if (fromSettings || (playEvery && !dismissedThisSession) || (!playEvery && !seen)) {
+      setShowTutorial(true)
+    }
+  }, [user?.id, location.state?.showTutorial])
+
+  const handleTutorialClose = () => {
+    if (user?.id) {
+      if (getPlayTutorialEveryLogin(user.id)) {
+        setTutorialDismissedThisSession()
+      } else {
+        setTutorialSeen(user.id)
+      }
+    }
+    setShowTutorial(false)
+    if (location.state?.showTutorial) {
+      navigate('/instructor', { replace: true, state: {} })
+    }
+  }
 
   const handleCreateClass = async (e) => {
     e.preventDefault()
@@ -148,6 +183,7 @@ export default function InstructorDashboard() {
       subtitle={user ? [user.name, user.department].filter(Boolean).join(' - ') || 'Instructor' : 'Instructor'}
       notificationCount={3}
     >
+      {showTutorial && <TutorialModal variant="instructor" onClose={handleTutorialClose} />}
       {/* Page selection at top of content, below header */}
       <nav className="flex flex-wrap gap-1 p-1 mb-5 rounded-xl bg-slate-100/80 border border-slate-200/60 shadow-inner w-fit">
         {TABS.map((tab) => (

@@ -9,7 +9,7 @@ class UserBase(BaseModel):
     role: Literal["instructor", "admin", "amu-staff"]
     department: str
     contact_number: str = ""
-    status: Literal["active", "inactive"] = "active"
+    status: Literal["active", "inactive", "pending"] = "active"
 
 
 class UserCreate(UserBase):
@@ -22,7 +22,7 @@ class UserUpdate(BaseModel):
     role: Optional[Literal["instructor", "admin", "amu-staff"]] = None
     department: Optional[str] = None
     contact_number: Optional[str] = None
-    status: Optional[Literal["active", "inactive"]] = None
+    status: Optional[Literal["active", "inactive", "pending"]] = None
 
 
 class UserResponse(UserBase):

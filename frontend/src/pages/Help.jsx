@@ -11,7 +11,7 @@ const FAQ = [
 export default function Help() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e8e0f5] via-[#e5eef7] to-[#d4e8f0] py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <div className="flex justify-center gap-4 mb-4">
           <div className="p-2 rounded-lg bg-white/60 shadow-sm">
             <Brain className="w-8 h-8 text-blue-600" strokeWidth={1.8} />
@@ -23,7 +23,7 @@ export default function Help() {
         <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">Help &amp; FAQ</h1>
         <p className="text-center text-gray-600 text-base mb-6">Academic Early Warning System</p>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80 p-8 space-y-5">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80 p-10 space-y-5">
           <div className="flex items-center gap-3 text-blue-600">
             <HelpCircle className="w-6 h-6" />
             <h2 className="font-semibold text-lg text-gray-900">Frequently asked questions</h2>

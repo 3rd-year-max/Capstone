@@ -44,7 +44,7 @@ export default function ForgotPassword() {
         </svg>
       </div>
 
-      <div className="relative z-10 w-full max-w-md px-4 text-center">
+      <div className="relative z-10 w-full max-w-xl px-4 text-center">
         <div className="flex justify-center gap-4 mb-4">
           <div className="p-2 rounded-lg bg-white/60 shadow-sm">
             <Brain className="w-8 h-8 text-blue-600" strokeWidth={1.8} />
@@ -59,7 +59,7 @@ export default function ForgotPassword() {
         </h1>
         <p className="text-gray-600 text-base mb-8">Reset your password.</p>
 
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8 text-left">
+        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-10 text-left">
           {!submitted ? (
             <>
               <h2 className="text-xl font-semibold text-gray-800 mb-1">Forgot password?</h2>
